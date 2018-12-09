@@ -134,6 +134,46 @@ public class HuffProcessor {
 		codingHelper(root.myLeft, encodings, s+"0");
 		codingHelper(root.myRight, encodings, s+"1");
 	}
+	
+	/**
+	 * recursively writes out a 0 for internal nodes
+	 * if node is a leaf, we write out a 1 and the value of the leaf
+	 * to the file
+	 * @param root
+	 * @param out
+	 */
+	private void writeHeader(HuffNode root, BitOutputStream out) {
+		if(root.myLeft == null && root.myRight == null) {
+			out.writeBits(1, 1);
+			out.writeBits(BITS_PER_WORD+1, root.myValue);
+		}
+		out.writeBits(1, 0);
+		writeHeader(root.myLeft, out);
+		writeHeader(root.myRight, out);
+	}
+	
+	/**
+	 * resets input stream
+	 * parses input file and outputs file with compressed values
+	 * does this by using the encodings array that was created earlier that 
+	 * contains all encodings for every character
+	 * @param codings
+	 * @param in
+	 * @param out
+	 */
+	private void writeCompressedBits(String[] codings,BitInputStream in, BitOutputStream out) {
+		in.reset();
+		while(true) {
+			int val = in.readBits(BITS_PER_WORD);
+			if(val==-1) break;
+			char letter = (char) val;
+			String code = codings[letter];
+			out.writeBits(code.length(),Integer.parseInt(code,2));
+		}
+		String code = codings[PSEUDO_EOF];
+		out.writeBits(code.length(), Integer.parseInt(code,2));
+	}
+	
 	/**
 	 * Decompresses a file. Output file must be identical bit-by-bit to the
 	 * original.
@@ -187,7 +227,7 @@ public class HuffProcessor {
 	 * if bits==1, we know to go right
 	 * keep going until we reach a leaf (left and right subchildren are both null)
 	 * when we hit a leaf, we write to the output file and reset the current node to the root of the tree
-	 * so we can retraverse the tree from the top
+	 * so we can re-traverse the tree from the top
 	 * @param root
 	 * @param in
 	 * @param out
