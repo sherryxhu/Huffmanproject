@@ -106,10 +106,34 @@ public class HuffProcessor {
 		return root;
 	}
 	
+	/** 
+	 * call recursive helper to return a String array of the encodings
+	 * corresponding to each character
+	 * @param root
+	 * @return
+	 */
 	private String[] makeCodingsFromTree(HuffNode root) {
-		
+		String[] encodings = new String[ALPH_SIZE+1];
+		codingHelper(root, encodings, "");
+		return encodings; 
 	}
 	
+	/**
+	 * coding helper traverses the tree for all possible paths
+	 * all nodes either have two children or no children
+	 * when we hit a leaf, manipulate the encodings array
+	 * @param root
+	 * @param encodings
+	 * @param s
+	 */
+	private void codingHelper(HuffNode root, String[] encodings, String s) {
+		if(root.myLeft == null && root.myRight == null) {
+			encodings[root.myValue] = s;
+			return;
+		}
+		codingHelper(root.myLeft, encodings, s+"0");
+		codingHelper(root.myRight, encodings, s+"1");
+	}
 	/**
 	 * Decompresses a file. Output file must be identical bit-by-bit to the
 	 * original.
